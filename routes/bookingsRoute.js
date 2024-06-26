@@ -10,66 +10,43 @@ const Booking = require("../models/booking");
 const Room = require("../models/room");
 
 router.post("/bookroom", async (req, res) => {
-  const { room, fromdate, todate, totalDays, totalAmount, user , token } = req.body;
+  const { token, user, room, fromdate, todate, totalDays, totalAmount } = req.body;
 
-    try {
-      const customer = await stripe.customers.create({
-        email: token.email,
-        source: token.id,
-      });
+  try {
 
-      const payment = await stripe.charges.create(
-        {
-          amount: totalAmount * 100,
-          currency: "usd",
-          customer: customer.id,
-          receipt_email: token.email,
-        },
-        {
-          idempotencyKey: uuidv4(),
-        }
-      );
+    const newbooking = new Booking({
+      userid: user._id,
+      username: user.name,
+      room: room.name,
+      roomid: room._id,
+      totalDays: totalDays,
+      fromdate: moment(fromdate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      todate: moment(todate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      totalAmount: totalAmount,
+      transactionId: "1234",
+      status: 'REZERVATA'
+    });
 
-      if (payment) {
-        try {
-          const newbooking = new Booking({
-            userid: user._id,
-            room: room.name,
-            roomid: room._id,
-            totalDays: totalDays,
-            fromdate: moment(fromdate).format("DD-MM-YYYY"),
-            todate: moment(todate).format("DD-MM-YYYY"),
-            totalAmount: totalAmount,
-            transactionId: "1234",
-            status:'booked'
-          });
-      
-          await newbooking.save(async (err, booking) => {
-            const oldroom = await Room.findOne({ _id: room._id });
-      
-            oldroom.currentbookings.push({
-              bookingid: booking._id,
-              fromdate: moment(fromdate).format("DD-MM-YYYY"),
-              todate: moment(todate).format("DD-MM-YYYY"),
-              userid: user._id,
-              status:'booked'
-            });
-            await oldroom.save();
-          });
-      
-          res.send("Room Booked Successfully");
-        } catch (error) {
-          console.log(error);
-          return res.status(400).json({ message: error });
-        }
-      } else {
-        res.send("Payment failed");
-      }
-    } catch (error) {
-      return res.status(400).json({ message: "Something went wrong" + error });
-    }
+    // Save the booking instance to the database
+    await newbooking.save();
 
-  
+    // Find the old room and update current bookings
+    const oldroom = await Room.findOne({ _id: room._id });
+    oldroom.currentbookings.push({
+      bookingid: newbooking._id,
+      fromdate: moment(fromdate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      todate: moment(todate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      userid: user._id,
+      status: 'REZERVATA'
+    });
+
+    await oldroom.save();
+
+    res.send("Room Booked Successfully");
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ message: "Booking failed", error: error.message });
+  }
 });
 
 router.post("/cancelbooking", async (req, res) => {

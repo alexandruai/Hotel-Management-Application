@@ -6,9 +6,14 @@ const path = require('path')
 const roomsRoutes = require('./routes/roomsRoute')
 const userRoute = require('./routes/userRoute')
 const bookingsRoute=require('./routes/bookingsRoute')
+const notificationRoute=require('./routes/notificationRoutes')
+const taskRoute=require('./routes/taskRoute')
+
 app.use('/api/rooms',roomsRoutes)
 app.use('/api/users' , userRoute)
 app.use('/api/bookings' , bookingsRoute)
+app.use('/api/notifications' , notificationRoute)
+app.use('/api/tasks' , taskRoute)
 
 if(process.env.NODE_ENV ==='production')
 {

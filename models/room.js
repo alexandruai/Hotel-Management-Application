@@ -10,7 +10,7 @@ const roomSchema = mongoose.Schema({
         required: true
     },
     phonenumber: {
-        type: Number,
+        type: String,
         required: true
     },
     rentperday: {
@@ -26,7 +26,19 @@ const roomSchema = mongoose.Schema({
     description: {
         type: String,
         required: true
-    }
+    },
+    status: {
+        type: String,
+        enum: ["LIBERA", "OCUPATA", "REZERVATA", "BLOCATA", "CURATA"],
+        required: true,
+        default: "LIBERA"
+    },
+    issues: [{
+        description: { type: String, required: true },
+        reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
+        dateReported: { type: Date, default: Date.now },
+        resolved: { type: Boolean, default: false }
+    }]
 }, {
     timestamps: true
 });

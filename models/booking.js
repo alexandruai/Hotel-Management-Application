@@ -4,6 +4,7 @@ const bookingSchema = mongoose.Schema({
     room:{type:String, required:true},
     roomid:{type:String, required:true},
     userid:{type:String , required:true},
+    username:{type:String , required:true},
     fromdate:{type:String, required:true},
     todate:{type:String, required:true},
     totalDays:{type:Number , required:true},
