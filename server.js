@@ -8,12 +8,17 @@ const userRoute = require('./routes/userRoute')
 const bookingsRoute=require('./routes/bookingsRoute')
 const notificationRoute=require('./routes/notificationRoutes')
 const taskRoute=require('./routes/taskRoute')
+const invoiceRoute =require('./routes/invoiceRoute')
+const requestRoute =require('./routes/requestRoute')
 
 app.use('/api/rooms',roomsRoutes)
 app.use('/api/users' , userRoute)
 app.use('/api/bookings' , bookingsRoute)
 app.use('/api/notifications' , notificationRoute)
 app.use('/api/tasks' , taskRoute)
+app.use('/api/invoices' , invoiceRoute)
+app.use('/api/requests' , requestRoute)
+
 
 if(process.env.NODE_ENV ==='production')
 {

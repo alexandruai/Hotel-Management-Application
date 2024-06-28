@@ -5,12 +5,14 @@ const bookingSchema = mongoose.Schema({
     roomid:{type:String, required:true},
     userid:{type:String , required:true},
     username:{type:String , required:true},
+    useremail:{type:String , required:true},
     fromdate:{type:String, required:true},
     todate:{type:String, required:true},
     totalDays:{type:Number , required:true},
     totalAmount:{type:Number, required:true},
-    transactionId:{type:String, required:true},
-    status:{type:String, required:true , default:'booked'},
+    transactionId:{type:String, required:false, default:''},
+    status:{type:String, required:true , default:'REZERVATA'},
+    statusPayment:{type:String, required:true , default:'NEPLATITA'},
 },{
     timestamps:true,
 }) 

@@ -175,4 +175,18 @@ router.post("/changepassword", async (req, res) => {
     }
   });
 
+  router.post("/getuserbyusername", async (req, res) => {
+    const { username } = req.body;
+    try {
+      const user = await User.findOne({ name: username });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.send(user);
+    } catch (error) {
+      console.error(error);
+      return res.status(400).json({ message: error.message });
+    }
+  });
+
 module.exports = router

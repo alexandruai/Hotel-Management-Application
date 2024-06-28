@@ -8,6 +8,48 @@ const stripe = require("stripe")(
 );
 const Booking = require("../models/booking");
 const Room = require("../models/room");
+const User = require("../models/user");
+
+router.post("/receptionbookroom", async (req, res) => {
+  const { room, userid, username, useremail, fromdate, todate, totalDays, totalAmount } = req.body;
+
+  try {
+
+    const newbooking = new Booking({
+      userid: userid,
+      username: username,
+      useremail: useremail,
+      room: room.name,
+      roomid: room._id,
+      totalDays: totalDays,
+      fromdate: moment(fromdate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      todate: moment(todate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      totalAmount: totalAmount,
+      status: 'REZERVATA',
+      statusPayment: 'NEPLATITA'
+    });
+
+    // Save the booking instance to the database
+    await newbooking.save();
+
+    // Find the old room and update current bookings
+    const oldroom = await Room.findOne({ _id: room._id });
+    oldroom.currentbookings.push({
+      bookingid: newbooking._id,
+      fromdate: moment(fromdate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      todate: moment(todate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      userid: userid,
+      status: 'REZERVATA'
+    });
+
+    await oldroom.save();
+
+    res.send("Room Booked Successfully");
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ message: "Booking failed", error: error.message });
+  }
+});
 
 router.post("/bookroom", async (req, res) => {
   const { token, user, room, fromdate, todate, totalDays, totalAmount } = req.body;
@@ -17,6 +59,7 @@ router.post("/bookroom", async (req, res) => {
     const newbooking = new Booking({
       userid: user._id,
       username: user.name,
+      useremail: user.email,
       room: room.name,
       roomid: room._id,
       totalDays: totalDays,
@@ -24,7 +67,8 @@ router.post("/bookroom", async (req, res) => {
       todate: moment(todate, "DD-MM-YYYY").format("DD-MM-YYYY"),
       totalAmount: totalAmount,
       transactionId: "1234",
-      status: 'REZERVATA'
+      status: 'REZERVATA',
+      statusPayment: 'ACHITATA'
     });
 
     // Save the booking instance to the database
@@ -56,13 +100,14 @@ router.post("/cancelbooking", async (req, res) => {
   try {
 
     const bookingitem = await Booking.findOne({_id: bookingid}) 
-    bookingitem.status='cancelled'
+    bookingitem.status='ANULATA'
     await bookingitem.save();
     const room = await Room.findOne({_id:roomid})
     const bookings = room.currentbookings
     const temp=bookings.filter(booking=>booking.bookingid.toString()!==bookingid)
     console.log(temp);
     room.currentbookings=temp;
+    room.status = 'LIBERA'
     await room.save()
 
     res.send('Booking deleted successfully')
@@ -90,5 +135,6 @@ router.get("/getallbookings", async (req, res) => {
     return res.status(400).json({ message: error });
   }
 });
+
 
 module.exports = router;

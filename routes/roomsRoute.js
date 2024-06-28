@@ -92,4 +92,97 @@ router.post("/getroomissues", async (req, res) => {
     }
 });
 
+router.post("/updateroomstatus", async (req, res) => {
+    const { roomid, status } = req.body;
+    try {
+        const room = await Room.findById(roomid);
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+        room.status = status;
+        await room.save();
+        res.send("Room status updated successfully");
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+router.post("/getavailable", async (req, res) => {
+    const { fromDate, toDate } = req.body;
+    try {
+      const rooms = await Room.find({
+        status: { $ne: "BLOCATA" },
+        $or: [
+          { currentbookings: { $size: 0 } },
+          {
+            currentbookings: {
+              $not: {
+                $elemMatch: {
+                  $or: [
+                    { fromdate: { $lte: toDate, $gte: fromDate } },
+                    { todate: { $lte: toDate, $gte: fromDate } },
+                    { fromdate: { $lte: fromDate }, todate: { $gte: toDate } }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      });
+      res.send(rooms);
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ message: error.message });
+    }
+  });
+
+  router.post("/addissue", async (req, res) => {
+    const { roomid, description, userid } = req.body;
+    try {
+      const room = await Room.findById(roomid);
+      if (!room) {
+        return res.status(404).json({ message: "Camera nu a fost gasita" });
+      }
+      room.issues.push({ description, reportedBy: userid });
+      await room.save();
+      res.send("Problema adaugata cu succes pentru camera selectata");
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+  });
+
+  router.post("/checkin", async (req, res) => {
+    const { roomid, clientName, clientEmail } = req.body;
+    try {
+        const room = await Room.findById(roomid);
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+        const userType = "client";
+        room.status = "OCUPATA";
+        room.history.push({ action: "CHECK IN", clientName, clientEmail, userType });
+        await room.save();
+        res.send("Check-in successful");
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+router.post("/checkout", async (req, res) => {
+    const { roomid, clientName, clientEmail} = req.body;
+    try {
+        const room = await Room.findById(roomid);
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+        const userType = "client";
+        room.status = "LIBERA";
+        room.history.push({ action: "CHECK OUT", clientName, clientEmail, userType });
+        await room.save();
+        res.send("Check-out successful");
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+}); 
+
 module.exports = router;
