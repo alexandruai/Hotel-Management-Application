@@ -43,7 +43,6 @@ router.post("/login", async(req, res) => {
                 type: user[0].type,
                 _id : user[0]._id
             }
-           // console.log("Found user ", currentUser)
             res.send(currentUser);
         }
         else{

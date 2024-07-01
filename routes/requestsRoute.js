@@ -4,10 +4,10 @@ const Request = require('../models/request');
 
 // Create a new request
 router.post('/createrequest', async (req, res) => {
-    const { clientName, clientEmail, room, services } = req.body;
+    const { clientName, clientEmail, room, roomName, services } = req.body;
 
     try {
-        const newRequest = new Request({ clientName, clientEmail, room, services });
+        const newRequest = new Request({ clientName, clientEmail, room, roomName, services });
         await newRequest.save();
         res.status(201).json(newRequest);
     } catch (error) {
