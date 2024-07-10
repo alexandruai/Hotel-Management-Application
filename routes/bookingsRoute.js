@@ -14,6 +14,9 @@ router.post("/receptionbookroom", async (req, res) => {
   const { room, userid, username, useremail, fromdate, todate, totalDays, totalAmount } = req.body;
 
   try {
+    // Convert incoming date strings to the desired format
+    const formattedFromDate = moment(fromdate).format("DD-MM-YYYY");
+    const formattedToDate = moment(todate).format("DD-MM-YYYY");
 
     const newbooking = new Booking({
       userid: userid,
@@ -22,8 +25,8 @@ router.post("/receptionbookroom", async (req, res) => {
       room: room.name,
       roomid: room._id,
       totalDays: totalDays,
-      fromdate: moment(fromdate, "DD-MM-YYYY").format("DD-MM-YYYY"),
-      todate: moment(todate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      fromdate: formattedFromDate,
+      todate: formattedToDate,
       totalAmount: totalAmount,
       status: 'REZERVATA',
       statusPayment: 'NEPLATITA'
@@ -36,8 +39,8 @@ router.post("/receptionbookroom", async (req, res) => {
     const oldroom = await Room.findOne({ _id: room._id });
     oldroom.currentbookings.push({
       bookingid: newbooking._id,
-      fromdate: moment(fromdate, "DD-MM-YYYY").format("DD-MM-YYYY"),
-      todate: moment(todate, "DD-MM-YYYY").format("DD-MM-YYYY"),
+      fromdate: formattedFromDate,
+      todate: formattedToDate,
       userid: userid,
       status: 'REZERVATA'
     });

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Room = require('../models/room');
+const moment = require('moment');
 
 router.get("/getallrooms", async (req, res) => {
     try {
@@ -107,48 +108,62 @@ router.post("/updateroomstatus", async (req, res) => {
     }
 });
 
+
 router.post("/getavailable", async (req, res) => {
     const { fromDate, toDate, type } = req.body;
-  
-    // Ensure the dates are in the correct format
-    const fromDateString = new Date(fromDate).toISOString();
-    const toDateString = new Date(toDate).toISOString();
-  
-    console.log("Received dates:", { fromDate, toDate });
-    console.log("Converted to strings:", { fromDateString, toDateString });
-  
-    try {
-      const rooms = await Room.find({
-        status: { $ne: "BLOCATA" },
-       // type: type !== 'all' ? type : { $exists: true },
-        $or: [
-          { currentbookings: { $size: 0 } },
-          {
-            currentbookings: {
-              $not: {
-                $elemMatch: {
-                  $or: [
-                    { fromdate: { $lte: toDateString, $gte: fromDateString } },
-                    { todate: { $lte: toDateString, $gte: fromDateString } },
-                    { fromdate: { $lte: fromDateString }, todate: { $gte: toDateString } }
-                  ]
-                }
-              }
-            }
-          }
-        ]
-      });
-  
-      console.log("Rooms found:", rooms);
-      res.send(rooms);
-    } catch (error) {
-      console.log("Error finding rooms:", error);
-      return res.status(400).json({ message: error.message });
-    }
-  });
-  
-  
+    console.log("Date ", { fromDate, toDate });
 
+    // Parsing dates in DD-MM-YYYY format
+    const parseDate = (dateStr) => {
+        const [day, month, year] = dateStr.split('-');
+        return new Date(`${year}-${month}-${day}T00:00:00Z`);
+    };
+
+    const fromDateObj = parseDate(fromDate);
+    const toDateObj = parseDate(toDate);
+
+    if (isNaN(fromDateObj) || isNaN(toDateObj)) {
+        return res.status(400).json({ message: "Invalid date values provided." });
+    }
+
+    const fromDateString = fromDateObj.toISOString();
+    const toDateString = toDateObj.toISOString();
+    console.log("Converted dates to strings:", { fromDateString, toDateString });
+
+    try {
+        const rooms = await Room.find({
+            status: { $ne: "BLOCATA" },
+            // Uncomment if type filter is needed
+            // type: type !== 'all' ? type : { $exists: true },
+            $or: [
+                { currentbookings: { $size: 0 } },
+                {
+                    currentbookings: {
+                        $not: {
+                            $elemMatch: {
+                                $or: [
+                                    { fromdate: { $lte: toDateString, $gte: fromDateString } },
+                                    { todate: { $lte: toDateString, $gte: fromDateString } },
+                                    { fromdate: { $lte: fromDateString }, todate: { $gte: toDateString } }
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        });
+
+        console.log("Rooms found:", rooms);
+        res.send(rooms);
+    } catch (error) {
+        console.log("Error finding rooms:", error);
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+
+  
+  
 router.post("/addissue", async (req, res) => {
     const { roomid, description, userid } = req.body;
     try {
