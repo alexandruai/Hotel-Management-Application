@@ -106,12 +106,21 @@ router.post("/updateroomstatus", async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 });
+
 router.post("/getavailable", async (req, res) => {
     const { fromDate, toDate, type } = req.body;
+  
+    // Ensure the dates are in the correct format
+    const fromDateString = new Date(fromDate).toISOString();
+    const toDateString = new Date(toDate).toISOString();
+  
+    console.log("Received dates:", { fromDate, toDate });
+    console.log("Converted to strings:", { fromDateString, toDateString });
+  
     try {
       const rooms = await Room.find({
         status: { $ne: "BLOCATA" },
-        type: type !== 'all' ? type : { $exists: true },
+       // type: type !== 'all' ? type : { $exists: true },
         $or: [
           { currentbookings: { $size: 0 } },
           {
@@ -119,9 +128,9 @@ router.post("/getavailable", async (req, res) => {
               $not: {
                 $elemMatch: {
                   $or: [
-                    { fromdate: { $lte: toDate, $gte: fromDate } },
-                    { todate: { $lte: toDate, $gte: fromDate } },
-                    { fromdate: { $lte: fromDate }, todate: { $gte: toDate } }
+                    { fromdate: { $lte: toDateString, $gte: fromDateString } },
+                    { todate: { $lte: toDateString, $gte: fromDateString } },
+                    { fromdate: { $lte: fromDateString }, todate: { $gte: toDateString } }
                   ]
                 }
               }
@@ -129,12 +138,15 @@ router.post("/getavailable", async (req, res) => {
           }
         ]
       });
+  
+      console.log("Rooms found:", rooms);
       res.send(rooms);
     } catch (error) {
-      console.log(error);
+      console.log("Error finding rooms:", error);
       return res.status(400).json({ message: error.message });
     }
   });
+  
   
 
 router.post("/addissue", async (req, res) => {
